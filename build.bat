@@ -1,5 +1,4 @@
 @echo off
-@set path=C:\Program Files\NASM;%path%
 
 mkdir bin
 
