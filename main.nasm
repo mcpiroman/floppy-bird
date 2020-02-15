@@ -1,6 +1,6 @@
 org 1000h
 bits 16
-cpu 486
+cpu 186
 
 jmp short Start
 
@@ -13,7 +13,7 @@ endstruc
 %define COLUMN_WIDTH 4
 %define COLUMN_INTERVAL 25
 %define MAX_VISIBLE_COLUMNS 10 ;(80 - 1 + COLUMN_WIDTH) / COLUMN_INTERVAL
-%define FIRST_COLUMN_POS_X 70
+%define FIRST_COLUMN_POS_X 60
 %define GROUND_HEIGHT 4
 %define COLUMN_TOP_MIN_Y 2
 %define COLUMN_TOP_MAX_Y 16 - GROUND_HEIGHT
@@ -62,13 +62,15 @@ StartMenu:
 	int 16h
 	jmp StartGame
 StartGame:
-	mov eax, [playerStartY] ; set player pos and speed
-	mov [playerY], eax
-	mov eax, [playerStartYVel]
-	mov [playerYVel], eax
+	mov si, playerStartY ; set player pos and speed
+	mov di, playerY
+	call Copy32
+	mov si, playerStartYVel
+	mov di, playerYVel
+	call Copy32
 	mov word [score], 0
 	mov byte [collCnt], 0
-	mov bl, FIRST_COLUMN_POS_X
+	mov dl, FIRST_COLUMN_POS_X
 	call SpawnColumn
 	
 	mov cx, 80 ; draw ground
@@ -90,9 +92,10 @@ StartGame:
 	jz .noJump
 	xor ah, ah
 	int 16h ;TODO: check if this is the jump key
-	mov eax, [jumpSpeed]
-	mov [playerYVel], eax	
-	.noJump:	
+	mov si, jumpSpeed
+	mov di, playerYVel
+	call Copy32
+	.noJump:
 	fld dword [playerYVel] ; update velocity and y position
 	fadd dword [gravityAcc]
 	fld dword [playerVelFactor]
@@ -107,7 +110,8 @@ StartGame:
 	
 	cmp byte [playerYInt], 1 ; check if player is too high
 	jns .yPositive
-	mov dword [playerY], 0
+	mov word [playerY], 0
+	mov word [playerY + 2], 0
 	mov byte [playerYInt], 0
 	.yPositive:
 	
@@ -126,7 +130,8 @@ StartGame:
 		push dx
 		xor dh, dh
 		.printRowLoop:
-			movzx cx, [columnWidth]
+			xor cx, cx
+			mov cl, [columnWidth]
 			mov dl, [si+column.posX]
 			test dl, dl
 			jns .xNotNeg
@@ -165,13 +170,14 @@ StartGame:
 	mov ah, [collCnt]
 	dec ah
 	mul ah
-	movzx di, al
-	add di, colls
+	xor bx, bx
+	mov bl, al
+	add bx, colls
 	mov al, 80
-	sub al, [di+column.posX]
+	sub al, [bx+column.posX]
 	cmp al, COLUMN_INTERVAL
 	jne .noSpawn
-	mov bl, 79 ; (79 - COLUMN_WIDTH)
+	mov dl, 79 ; (79 - COLUMN_WIDTH)
 	call SpawnColumn
 	.noSpawn:
 	
@@ -236,7 +242,8 @@ StartGame:
 	mov al, [collCnt]
 	mov ah, column_size
 	mul ah
-	movzx cx, al
+	xor cx, cx
+	mov cl, al
 	rep movsb
 	.noRemove:
 	
@@ -285,6 +292,15 @@ jmp DeadLoop
 ;================================== Subroutines ==================================
 ;=================================================================================
 
+; args: si, di
+; invalidates: ax
+Copy32:
+	mov ax, [si]
+	mov [di], ax
+	mov ax, [si + 2]
+	mov [di + 2], ax
+	ret
+
 ; args: bh = color
 ClearScreen:
 	mov ah, 06h
@@ -295,23 +311,24 @@ ClearScreen:
 	int 10h
 	ret	
 
-; args: bl = x	
+; args: dl = x	
 ; invalidates: ax, bx, dx, di
 SpawnColumn:
 	mov al, column_size
 	mov ah, [collCnt]
 	mul ah
-	movzx di, al
-	add di, colls
-	mov [di+column.posX], bl
+	xor bx, bx
+	mov bl, al
+	add bx, colls
+	mov [bx+column.posX], dl
 	call NextRandomNum
 	xor dx, dx
-	mov bx, COLUMN_TOP_MAX_Y - COLUMN_TOP_MIN_Y
-	div bx
+	mov di, COLUMN_TOP_MAX_Y - COLUMN_TOP_MIN_Y
+	div di
 	add dx, COLUMN_TOP_MIN_Y
-	mov byte [di+column.highY], dl
+	mov byte [bx+column.highY], dl
 	add dl, [columnSpaceHeight]
-	mov byte [di+column.lowY], dl
+	mov byte [bx+column.lowY], dl
 	inc byte [collCnt]
 	ret
 
@@ -375,7 +392,7 @@ columnSpaceHeight db 8
 groundHeight db GROUND_HEIGHT
 
 ; VirtualBox sometimes appears to have messed up clock. If so, multiply values below by 4.
-updateInterval dd 1_000_000 / 20
+updateInterval dd 1_000_000 / 20 * 4
 restartDelay dd 250_000
 
 %include "commonSubroutines.nasm"

@@ -1,6 +1,6 @@
 org 7C00h
 bits 16
-cpu 386
+cpu 186
 
 jmp short Start
 
