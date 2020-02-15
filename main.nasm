@@ -161,12 +161,12 @@ StartGame:
 		.end:	
 		pop dx
 		dec byte [si+Column.posX]
-		add si, column_size
+		add si, Column_size
 		inc dl
 		cmp dl, [colCnt]
 		jne .columnLoop
 	
-	mov al, column_size ; spawn new Column if necessary
+	mov al, Column_size ; spawn new column if necessary
 	mov ah, [colCnt]
 	dec ah
 	mul ah
@@ -206,7 +206,7 @@ StartGame:
 	jmp GameOver
 	.noGroundCollision:
 	
-	cmp word [colCnt], 0 ; remove first Column if off view. add score. check Column collision
+	cmp word [colCnt], 0 ; remove first column if off view. add score. check column collision
 	je .noRemove
 	mov al, [cols+Column.posX]
 	inc al
@@ -237,10 +237,10 @@ StartGame:
 	dec byte [colCnt]
 	cld
 	mov si, cols
-	add si, column_size
+	add si, Column_size
 	mov di, cols	
 	mov al, [colCnt]
-	mov ah, column_size
+	mov ah, Column_size
 	mul ah
 	xor cx, cx
 	mov cl, al
@@ -314,7 +314,7 @@ ClearScreen:
 ; args: dl = x	
 ; invalidates: ax, bx, dx, di
 SpawnColumn:
-	mov al, column_size
+	mov al, Column_size
 	mov ah, [colCnt]
 	mul ah
 	xor bx, bx
@@ -378,7 +378,7 @@ playerX db 15 ; const
 playerY dd 0.0
 playerYInt db 0
 playerYVel dd 0.0
-cols resb column_size * MAX_VISIBLE_COLUMNS
+cols resb Column_size * MAX_VISIBLE_COLUMNS
 colCnt db 0
 score dw 0
 
@@ -396,4 +396,4 @@ updateInterval dd 1_000_000 / 20
 restartDelay dd 250_000
 
 %include "commonSubroutines.nasm"
-times 1200h - ($ - $$) db 0 ; take up 3 segments
+times (3 * 200h) - ($ - $$) db 0 ; take up 3 segments

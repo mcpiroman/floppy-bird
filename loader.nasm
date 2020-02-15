@@ -93,5 +93,5 @@ LoadFailature:
 	
 %include "commonSubroutines.nasm"
  
-times 0200h - 2 - ($ - $$) db 0 ; zerofill up to 510 bytes
+times 200h - 2 - ($ - $$) db 0 ; zerofill up to 510 bytes
 dw 0AA55h ; Boot Sector signature
