@@ -4,7 +4,7 @@ cpu 186
 
 jmp short Start
 
-struc column
+struc Column
 	.posX: resb 1
 	.lowY: resb 1
 	.highY: resb 1
@@ -69,7 +69,7 @@ StartGame:
 	mov di, playerYVel
 	call Copy32
 	mov word [score], 0
-	mov byte [collCnt], 0
+	mov byte [colCnt], 0
 	mov dl, FIRST_COLUMN_POS_X
 	call SpawnColumn
 	
@@ -123,7 +123,7 @@ StartGame:
 	int 10h	
 	
 	xor dl, dl ; draw collumns. move colluns
-	mov si, colls
+	mov si, cols
 	xor bh, bh
 	mov al, 'X'
 	.columnLoop:
@@ -132,7 +132,7 @@ StartGame:
 		.printRowLoop:
 			xor cx, cx
 			mov cl, [columnWidth]
-			mov dl, [si+column.posX]
+			mov dl, [si+Column.posX]
 			test dl, dl
 			jns .xNotNeg
 			add cl, dl 
@@ -150,31 +150,31 @@ StartGame:
 			mov bl, 0Dh
 			int 10h
 			inc dh
-			cmp dh, [si+column.highY]
+			cmp dh, [si+Column.highY]
 			je .lower
 			cmp dh, 25 - GROUND_HEIGHT
 			je .end
 			jmp .printRowLoop
 		.lower:
-			mov dh, [si+column.lowY]
+			mov dh, [si+Column.lowY]
 			jmp .printRowLoop
 		.end:	
 		pop dx
-		dec byte [si+column.posX]
+		dec byte [si+Column.posX]
 		add si, column_size
 		inc dl
-		cmp dl, [collCnt]
+		cmp dl, [colCnt]
 		jne .columnLoop
 	
-	mov al, column_size ; spawn new column if necessary
-	mov ah, [collCnt]
+	mov al, column_size ; spawn new Column if necessary
+	mov ah, [colCnt]
 	dec ah
 	mul ah
 	xor bx, bx
 	mov bl, al
-	add bx, colls
+	add bx, cols
 	mov al, 80
-	sub al, [bx+column.posX]
+	sub al, [bx+Column.posX]
 	cmp al, COLUMN_INTERVAL
 	jne .noSpawn
 	mov dl, 79 ; (79 - COLUMN_WIDTH)
@@ -206,9 +206,9 @@ StartGame:
 	jmp GameOver
 	.noGroundCollision:
 	
-	cmp word [collCnt], 0 ; remove first column if off view. add score. check column collision
+	cmp word [colCnt], 0 ; remove first Column if off view. add score. check Column collision
 	je .noRemove
-	mov al, [colls+column.posX]
+	mov al, [cols+Column.posX]
 	inc al
 	cmp [playerX], al
 	jl .noCollision
@@ -216,17 +216,17 @@ StartGame:
 	cmp [playerX], al
 	jg .noCollision
 	mov ah, [playerYInt]
-	mov al, [colls+column.lowY]
+	mov al, [cols+Column.lowY]
 	cmp ah, al
 	jnl .collision
-	mov al, [colls+column.highY]
+	mov al, [cols+Column.highY]
 	cmp ah, al
 	jl .collision
 	jmp .noCollision
 	.collision:
 	jmp GameOver
 	.noCollision:
-	mov al, [colls+column.posX]
+	mov al, [cols+Column.posX]
 	add al, [columnWidth]
 	cmp al, [playerX]
 	jne .noScore
@@ -234,12 +234,12 @@ StartGame:
 	.noScore:
 	test al, al
 	jnz .noRemove
-	dec byte [collCnt]
+	dec byte [colCnt]
 	cld
-	mov si, colls
+	mov si, cols
 	add si, column_size
-	mov di, colls	
-	mov al, [collCnt]
+	mov di, cols	
+	mov al, [colCnt]
 	mov ah, column_size
 	mul ah
 	xor cx, cx
@@ -315,21 +315,21 @@ ClearScreen:
 ; invalidates: ax, bx, dx, di
 SpawnColumn:
 	mov al, column_size
-	mov ah, [collCnt]
+	mov ah, [colCnt]
 	mul ah
 	xor bx, bx
 	mov bl, al
-	add bx, colls
-	mov [bx+column.posX], dl
+	add bx, cols
+	mov [bx+Column.posX], dl
 	call NextRandomNum
 	xor dx, dx
 	mov di, COLUMN_TOP_MAX_Y - COLUMN_TOP_MIN_Y
 	div di
 	add dx, COLUMN_TOP_MIN_Y
-	mov byte [bx+column.highY], dl
+	mov byte [bx+Column.highY], dl
 	add dl, [columnSpaceHeight]
-	mov byte [bx+column.lowY], dl
-	inc byte [collCnt]
+	mov byte [bx+Column.lowY], dl
+	inc byte [colCnt]
 	ret
 
 ; ret: ax = random number
@@ -378,8 +378,8 @@ playerX db 15 ; const
 playerY dd 0.0
 playerYInt db 0
 playerYVel dd 0.0
-colls resb column_size * MAX_VISIBLE_COLUMNS
-collCnt db 0
+cols resb column_size * MAX_VISIBLE_COLUMNS
+colCnt db 0
 score dw 0
 
 playerStartY dd 6.0
@@ -392,7 +392,7 @@ columnSpaceHeight db 8
 groundHeight db GROUND_HEIGHT
 
 ; VirtualBox sometimes appears to have messed up clock. If so, multiply values below by 4.
-updateInterval dd 1_000_000 / 20 * 4
+updateInterval dd 1_000_000 / 20
 restartDelay dd 250_000
 
 %include "commonSubroutines.nasm"
