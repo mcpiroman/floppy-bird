@@ -1,4 +1,4 @@
-__Floppy Bird__ is a port of Flappy Bird that runs in BIOS, written in x86 assembly (nasm syntax).
+__Floppy Bird__ is a port of Flappy Bird that runs in BIOS and is written in x86 assembly (nasm syntax).
 
 To play, just flush the image to your pendriave, CD or ~flappy~ floppy disk and boot your computer from it. Alternatively, you may use virtual machine or emulator, for example Virtual Box (note that VB has probably something messed up with clock, so you may need to adjust timing in code).
 
@@ -7,5 +7,5 @@ To play, just flush the image to your pendriave, CD or ~flappy~ floppy disk and 
 ### System Requirements:
 - _Operating System:_ no
 - _Video Card:_ no
-- _Processor:_ 8086 or higher
-- _Storage:_ 756 bytes of free disk space
+- _Processor:_ 80186 or higher
+- _Storage:_ 0x600 bytes of free space
