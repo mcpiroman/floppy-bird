@@ -396,4 +396,4 @@ updateInterval dd 1_000_000 / 20
 restartDelay dd 250_000
 
 %include "commonSubroutines.nasm"
-times (3 * 200h) - ($ - $$) db 0 ; take up 3 segments
+times (2 * 200h) - ($ - $$) db 0 ; take up 2 segments and assert we don't overflow beyond that

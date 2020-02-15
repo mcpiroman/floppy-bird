@@ -26,7 +26,7 @@ db "FAT16   "    ; file system type
 
 %define STACK_BASE_ADDR 1000h
 %define PROGRAM_LOAD_ADDR 1000h
-%define SEGMENTS_TO_LOAD 4
+%define SEGMENTS_TO_LOAD 2
 
 startMsg db "Starting loader", 0
 jumpingToProgramMsg db "Jumping to program..", 0
