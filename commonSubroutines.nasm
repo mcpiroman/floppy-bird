@@ -1,7 +1,7 @@
 
 ; args: al = char, bl = attibute, bh = page, dl = cursor x, dh = cursor y
 ; invalidates: ah, cx
-printChar:
+PrintChar:
 	mov cx, 1
 	mov ah, 2
 	int 10h	
@@ -12,13 +12,24 @@ printChar:
 
 ; args: ax = address to string, bl = attibute, bh = page, dl = cursor x, dh = cursor y
 ; invalidates: ax, cx, si
-printString:	
+PrintString:
+	push dx
 	mov si, ax
 	mov cx, 1
 	.loop:
 	mov al, [si]
+	
 	test al, al
 	jz .end
+	
+	cmp al, `\n`
+	jne .writableChar
+	inc dh
+	mov dl, [bp-4]
+	inc si
+	jmp .loop
+	
+	.writableChar:
 	mov ah, 2
 	int 10h	
 	mov ah, 9
@@ -26,12 +37,14 @@ printString:
 	inc dl			
 	inc si
 	jmp .loop
+	
 	.end:
+	pop dx
 	ret
 
 ; args: al = number to print, bl = attibute, bh = page, dl = cursor x, dh = cursor y
 ; invalidates: ax, cx
-printNumDec:	
+PrintNumDec:	
 	test al, al
 	jnz .print_ax
 	push ax
@@ -70,7 +83,7 @@ printNumDec:
 	ret
 	
 ; args: ax = number to print, bl = attibute, bh = page, dl = cursor x, dh = cursor y
-printNumHex:
+PrintNumHex:
 	push cx
 	push si
 	mov cx, ax
@@ -98,5 +111,44 @@ printNumHex:
 	dec si
 	jns .loop
 	pop si
+	pop cx
+	ret
+
+; args: si, di
+; invalidates: ax
+Copy32:
+	mov ax, [si]
+	mov [di], ax
+	mov ax, [si + 2]
+	mov [di + 2], ax
+	ret
+
+; args: bh = color
+ClearScreen:
+	mov ah, 06h
+	xor al, al
+	xor cx, cx
+	mov dh, 24
+	mov dl, 79
+	int 10h
+	ret	
+	
+; args: cx = width, ah = height, al = char, bl = color, bh = page, dl = x, dh = y
+; invalidates: ah, dh, si
+FillRect:
+	push cx
+	mov cl, dh
+	add cl, ah
+	mov si, sp
+	.loop:
+		mov ah, 02h
+		int 10h
+		mov ah, 09h
+		xchg cx, [si]
+		int 10h
+		xchg cx, [si]
+		inc dh
+		cmp dh, cl
+		jne .loop
 	pop cx
 	ret

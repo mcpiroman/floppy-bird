@@ -2,7 +2,7 @@
 
 mkdir bin
 
-@echo on
+@echo off
 nasm -f bin -w-other -o bin\main.bin main.nasm
 nasm -f bin -o bin\loader.bin loader.nasm
 

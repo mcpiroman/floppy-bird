@@ -26,7 +26,7 @@ db "FAT16   "    ; file system type
 
 %define STACK_BASE_ADDR 1000h
 %define PROGRAM_LOAD_ADDR 1000h
-%define SEGMENTS_TO_LOAD 2
+%define SEGMENTS_TO_LOAD 10
 
 startMsg db "Starting loader", 0
 jumpingToProgramMsg db "Jumping to program..", 0
@@ -55,7 +55,7 @@ Start2:
 	mov dh, al      ; DH - cursor y
 	
 	mov ax, startMsg
-	call printString
+	call PrintString
 	
 	push bx
 	push dx		
@@ -74,7 +74,7 @@ Start2:
 	inc dh
 	xor dl, dl
 	mov ax, jumpingToProgramMsg
-	call printString
+	call PrintString
 	inc dh
 	
 	mov dl, [currentDrive]
@@ -85,7 +85,7 @@ LoadFailature:
 	inc dh
 	xor dl, dl
 	mov ax, programLoadFailedMsg
-	call printString
+	call PrintString
 	
 	IdleLoop:
 	hlt

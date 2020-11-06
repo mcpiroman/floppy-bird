@@ -13,10 +13,19 @@ endstruc
 %define COLUMN_WIDTH 4
 %define COLUMN_INTERVAL 25
 %define MAX_VISIBLE_COLUMNS 10 ;(80 - 1 + COLUMN_WIDTH) / COLUMN_INTERVAL
-%define FIRST_COLUMN_POS_X 60
+%define FIRST_COLUMN_POS_X 58 ; bugs when too low
 %define GROUND_HEIGHT 4
 %define COLUMN_TOP_MIN_Y 2
 %define COLUMN_TOP_MAX_Y 16 - GROUND_HEIGHT
+
+%define COLUMN_COLOR 0Ah
+%define GRASS_COLOR 02h
+%define GROUND_COLOR 06h
+%define PLAYER_COLOR 0Bh
+%define PANCERNIK_COLOR 0Bh
+
+; VirtualBox sometimes appears to have messed up clock. If so, multiply values below by 4.
+%define TIME_MULT 1
 
 ;=================================================================================
 ;=================================== Main code ===================================
@@ -45,18 +54,138 @@ StartMenu:
 	xor bh, bh
 	call ClearScreen
 
-	mov ax, szWelcomeToTheGame ; print welcome
-	mov bl, 0Ch
+	mov ax, szTitle ; print title
+	mov bl, 0Fh
 	xor bh, bh
-	mov dl, 28
-	mov dh, 12
-	call printString
+	mov dl, 6
+	mov dh, 1
+	call PrintString
+
 	mov ax, szPressToPlay ; print press to play
 	mov bl, 0Eh
 	xor bh, bh
 	mov dl, 28
-	mov dh, 13
-	call printString
+	mov dh, 14
+	call PrintString
+	
+	mov ax, szVersion ; print version
+	mov bl, 07h
+	xor bh, bh
+	mov dl, 59
+	mov dh, 24
+	call PrintString
+	
+	mov ax, szPancernikLeft ; print left pancernik
+	mov bl, PANCERNIK_COLOR
+	xor bh, bh
+	mov dl, 1
+	mov dh, 9
+	call PrintString
+	
+	mov ax, szPancernikRight ; print right pancernik
+	mov bl, PANCERNIK_COLOR
+	xor bh, bh
+	mov dl, 56
+	mov dh, 9
+	call PrintString
+	
+	.loop:
+		mov ah, 86h
+		mov word dx, [pancernikFloatInterval]
+		mov word cx, [pancernikFloatInterval+2]
+		int 15h
+		mov ah, 01h
+		int 16h
+		jnz StartGame
+		
+		mov ax, szPancernikLeft ; print left upper pancernik
+		mov bl, PANCERNIK_COLOR
+		xor bh, bh
+		mov dl, 1
+		mov dh, 8
+		call PrintString
+		
+		mov cx, 21
+		mov ah, 1
+		mov al, ' '
+		mov bl, 0
+		xor bh, bh
+		mov dl, 1
+		mov dh, 21
+		call FillRect
+		
+		mov ah, 86h
+		mov word dx, [pancernikFloatInterval]
+		mov word cx, [pancernikFloatInterval+2]
+		int 15h
+		mov ah, 01h
+		int 16h
+		jnz StartGame
+		
+		mov ax, szPancernikRight ; print right pancernik
+		mov bl, PANCERNIK_COLOR
+		xor bh, bh
+		mov dl, 56
+		mov dh, 8
+		call PrintString
+		
+		mov cx, 21
+		mov ah, 1
+		mov al, ' '
+		mov bl, 0
+		xor bh, bh
+		mov dl, 56
+		mov dh, 21
+		call FillRect
+		
+		mov ah, 86h
+		mov word dx, [pancernikFloatInterval]
+		mov word cx, [pancernikFloatInterval+2]
+		int 15h
+		mov ah, 01h
+		int 16h
+		jnz StartGame	
+		
+		mov ax, szPancernikLeft ; print left lower pancernik
+		mov bl, PANCERNIK_COLOR
+		xor bh, bh
+		mov dl, 1
+		mov dh, 9
+		call PrintString
+		
+		mov cx, 21
+		mov ah, 1
+		mov al, ' '
+		mov bl, 0
+		xor bh, bh
+		mov dl, 1
+		mov dh, 8
+		call FillRect
+		
+		mov ah, 86h
+		mov word dx, [pancernikFloatInterval]
+		mov word cx, [pancernikFloatInterval+2]
+		int 15h
+		mov ah, 01h
+		int 16h
+		jnz StartGame
+		
+		mov ax, szPancernikRight ; print right lower pancernik
+		mov bl, PANCERNIK_COLOR
+		xor bh, bh
+		mov dl, 56
+		mov dh, 9
+		call PrintString
+		
+		mov cx, 21
+		mov ah, 1
+		mov al, ' '
+		mov bl, 0
+		xor bh, bh
+		mov dl, 56
+		mov dh, 8
+		call FillRect
+	jmp .loop
 	
 	xor ah, ah ; wait for any key
 	int 16h
@@ -76,12 +205,12 @@ StartGame:
 	mov cx, 80 ; draw ground
 	mov ah, 1
 	mov al, '#'
-	mov bl, 0Ah
+	mov bl, GRASS_COLOR
 	xor bh, bh
 	xor dl, dl
 	mov dh, 25 - GROUND_HEIGHT
 	call FillRect
-	mov bl, 06h
+	mov bl, GROUND_COLOR
 	mov ah, GROUND_HEIGHT - 1
 	mov dh, 25 - GROUND_HEIGHT + 1
 	call FillRect
@@ -147,7 +276,7 @@ StartGame:
 			mov ah, 02h
 			int 10h		
 			mov ah, 09h
-			mov bl, 0Dh
+			mov bl, COLUMN_COLOR
 			int 10h
 			inc dh
 			cmp dh, [si+Column.highY]
@@ -181,25 +310,25 @@ StartGame:
 	call SpawnColumn
 	.noSpawn:
 	
-	mov al, 'B' ; draw player
-	mov bl, 0fh
+	mov al, 'P' ; draw player
+	mov bl, PLAYER_COLOR
 	xor bh, bh
 	mov dl, [playerX]
 	mov dh, [playerYInt]
-	call printChar
+	call PrintChar
 	
 	xor bh, bh ; draw score
 	mov dl, 36
 	xor dh, dh
 	mov ax, szScore 
 	mov bl, 0Eh
-	call printString
+	call PrintString
 	mov ax, [score] 
 	mov bl, 0Eh
 	xor bh, bh
 	mov dl, 43
 	xor dh, dh
-	call printNumDec
+	call PrintNumDec
 	
 	cmp byte [playerYInt], 25 - GROUND_HEIGHT ; check ground collision
 	js .noGroundCollision
@@ -272,7 +401,7 @@ GameOver:
 	mov bl, 40h
 	mov dl, 36
 	mov dh, 12
-	call printString
+	call PrintString
 	
 	mov ah, 86h ; FIXME: actually delay waiting for key press
 	mov word dx, [restartDelay]
@@ -292,25 +421,26 @@ jmp DeadLoop
 ;================================== Subroutines ==================================
 ;=================================================================================
 
-; args: si, di
-; invalidates: ax
-Copy32:
-	mov ax, [si]
-	mov [di], ax
-	mov ax, [si + 2]
-	mov [di + 2], ax
+; args: dh - y coord
+PrintPancernikLeft:
+	mov ax, szPancernikLeft ; print left pancernik
+	mov bl, 03h
+	xor bh, bh
+	mov dl, 1
+	mov dh, 9
+	call PrintString
 	ret
-
-; args: bh = color
-ClearScreen:
-	mov ah, 06h
-	xor al, al
-	xor cx, cx
-	mov dh, 24
-	mov dl, 79
-	int 10h
-	ret	
-
+	
+; args: dh - y coord
+PrintPancernikRight:
+	mov ax, szPancernikRight ; print right pancernik
+	mov bl, 03h
+	xor bh, bh
+	mov dl, 56
+	mov dh, 9
+	call PrintString
+	ret
+	
 ; args: dl = x	
 ; invalidates: ax, bx, dx, di
 SpawnColumn:
@@ -340,32 +470,13 @@ NextRandomNum:
     mov [lastRandNum], ax
     ret
 
-; args: cx = width, ah = height, al = char, bl = color, bh = page, dl = x, dh = y
-; invalidates: ah, dh, si
-FillRect:
-	push cx
-	mov cl, dh
-	add cl, ah
-	mov si, sp
-	.loop:
-		mov ah, 02h
-		int 10h
-		mov ah, 09h
-		xchg cx, [si]
-		int 10h
-		xchg cx, [si]
-		inc dh
-		cmp dh, cl
-		jne .loop
-	pop cx
-	ret
-
 ;=================================================================================
 ;================================== Global data ==================================
 ;=================================================================================
 	
 szWelcomeToTheGame db "Welcome to Floppy Bird",0
-szPressToPlay db "Press any key to play", 0
+szPressToPlay db "Press any key to play",0
+szVersion db "v2.13.7 disco build",0
 szScore db "Score: ",0
 szGameOver db "GAME OVER", 0
 
@@ -391,9 +502,19 @@ columnWidth db COLUMN_WIDTH
 columnSpaceHeight db 8
 groundHeight db GROUND_HEIGHT
 
-; VirtualBox sometimes appears to have messed up clock. If so, multiply values below by 4.
-updateInterval dd 1_000_000 / 20
-restartDelay dd 250_000
+updateInterval dd 1_000_000 / 20 * TIME_MULT
+restartDelay dd 200_000 * TIME_MULT
+pancernikFloatInterval dd 500_000 * TIME_MULT
 
 %include "commonSubroutines.nasm"
-times (2 * 200h) - ($ - $$) db 0 ; take up 2 segments and assert we don't overflow beyond that
+
+szTitle incbin "title.txt"
+db 0
+
+szPancernikLeft incbin "pancernik.txt"
+db 0
+
+szPancernikRight incbin "pancernik_right.txt"
+db 0
+
+times (10 * 200h) - ($ - $$) db 0 ; assert we take up to n segments
