@@ -476,7 +476,7 @@ NextRandomNum:
 	
 szWelcomeToTheGame db "Welcome to Floppy Bird",0
 szPressToPlay db "Press any key to play",0
-szVersion db "v2.13.7 disco build",0
+szVersion db "disco build",0
 szScore db "Score: ",0
 szGameOver db "GAME OVER", 0
 
